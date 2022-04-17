@@ -22,12 +22,14 @@ using System;
 using System.Configuration;
 using System.Diagnostics;
 using System.Reflection;
+using System.Runtime.Versioning;
 using System.Security.Principal;
 using System.Threading;
 using Switcheroo.Properties;
 
 namespace Switcheroo;
 
+[SupportedOSPlatform("windows")]
 internal class Program
 {
     private const string mutex_id = "DBDE24E4-91F6-11DF-B495-C536DFD72085-switcheroo";
@@ -37,38 +39,37 @@ internal class Program
     {
         RunAsAdministratorIfConfigured();
 
-        using (var mutex = new Mutex(false, mutex_id))
+        using var mutex = new Mutex(false, mutex_id);
+        
+        var hasHandle = false;
+        try
         {
-            var hasHandle = false;
             try
             {
-                try
-                {
-                    hasHandle = mutex.WaitOne(5000, false);
-                    if (hasHandle == false) return; //another instance exist
-                }
-                catch (AbandonedMutexException)
-                {
-                    // Log the fact the mutex was abandoned in another process, it will still get aquired
-                }
+                hasHandle = mutex.WaitOne(5000, false);
+                if (hasHandle == false) return; //another instance exist
+            }
+            catch (AbandonedMutexException)
+            {
+                // Log the fact the mutex was abandoned in another process, it will still get aquired
+            }
 
 #if PORTABLE
                         MakePortable(Settings.Default);
 #endif
 
-                MigrateUserSettings();
+            MigrateUserSettings();
 
-                var app = new App
-                {
-                    MainWindow = new MainWindow()
-                };
-                app.Run();
-            }
-            finally
+            var app = new App
             {
-                if (hasHandle)
-                    mutex.ReleaseMutex();
-            }
+                MainWindow = new MainWindow()
+            };
+            app.Run();
+        }
+        finally
+        {
+            if (hasHandle)
+                mutex.ReleaseMutex();
         }
     }
 

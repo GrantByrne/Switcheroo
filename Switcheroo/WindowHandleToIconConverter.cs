@@ -21,6 +21,7 @@
 using System;
 using System.Globalization;
 using System.Runtime.Caching;
+using System.Runtime.Versioning;
 using System.Windows.Data;
 using System.Windows.Media.Imaging;
 using Microsoft.Win32;
@@ -28,6 +29,7 @@ using Switcheroo.Core;
 
 namespace Switcheroo;
 
+[SupportedOSPlatform("windows")]
 public class WindowHandleToIconConverter : IValueConverter
 {
     private readonly IconToBitmapImageConverter _iconToBitmapConverter;
@@ -48,7 +50,7 @@ public class WindowHandleToIconConverter : IValueConverter
         {
             var window = new AppWindow(handle);
             var icon = ShouldUseSmallTaskbarIcons() ? window.SmallWindowIcon : window.LargeWindowIcon;
-            iconImage = _iconToBitmapConverter.Convert(icon) ?? new BitmapImage();
+            iconImage = IconToBitmapImageConverter.Convert(icon) ?? new BitmapImage();
             MemoryCache.Default.Set(shortCacheKey, iconImage, DateTimeOffset.Now.AddSeconds(5));
             MemoryCache.Default.Set(longCacheKey, iconImage, DateTimeOffset.Now.AddMinutes(120));
         }

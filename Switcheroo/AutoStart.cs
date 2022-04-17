@@ -22,12 +22,14 @@ using System;
 using System.IO;
 using System.Reflection;
 using System.Runtime.InteropServices;
+using System.Runtime.Versioning;
 
 namespace Switcheroo;
 
 // Create a shortcut file in the current users start up folder
 // Based on this answer on Stackoverflow:
 // http://stackoverflow.com/a/19914018/198065
+[SupportedOSPlatform("windows")]
 public class AutoStart
 {
     public bool IsEnabled
@@ -82,7 +84,7 @@ public class AutoStart
                 "It was not possible to delete the shortcut to Switcheroo in the startup folder");
         }
     }
-
+    
     private static void CreateShortcut(string appLink)
     {
         try

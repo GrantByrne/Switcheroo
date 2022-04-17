@@ -25,6 +25,7 @@ using System.Diagnostics;
 using System.Linq;
 using System.Net;
 using System.Reflection;
+using System.Runtime.Versioning;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
@@ -43,6 +44,7 @@ using MessageBox = System.Windows.MessageBox;
 
 namespace Switcheroo;
 
+[SupportedOSPlatform("windows")]
 public partial class MainWindow : Window
 {
     private WindowCloser _windowCloser;

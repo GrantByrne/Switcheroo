@@ -75,19 +75,19 @@ internal class Program
 
     private static void RunAsAdministratorIfConfigured()
     {
-        if (RunAsAdminRequested() && !IsRunAsAdmin() && Assembly.GetEntryAssembly() is not null)
+        if (!RunAsAdminRequested() || IsRunAsAdmin() || Assembly.GetEntryAssembly() is null) 
+            return;
+        
+        var proc = new ProcessStartInfo
         {
-            var proc = new ProcessStartInfo
-            {
-                UseShellExecute = true,
-                WorkingDirectory = Environment.CurrentDirectory,
-                FileName = Assembly.GetEntryAssembly()!.Location,
-                Verb = "runas"
-            };
+            UseShellExecute = true,
+            WorkingDirectory = Environment.CurrentDirectory,
+            FileName = Assembly.GetEntryAssembly()!.Location,
+            Verb = "runas"
+        };
 
-            Process.Start(proc);
-            Environment.Exit(0);
-        }
+        Process.Start(proc);
+        Environment.Exit(0);
     }
 
     private static bool RunAsAdminRequested()

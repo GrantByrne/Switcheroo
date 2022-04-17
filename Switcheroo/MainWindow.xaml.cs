@@ -24,6 +24,7 @@ using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.Linq;
 using System.Net;
+using System.Net.Http;
 using System.Reflection;
 using System.Runtime.Versioning;
 using System.Threading.Tasks;
@@ -220,7 +221,7 @@ public partial class MainWindow : Window
 
         var timer = new DispatcherTimer();
 
-        timer.Tick += async (sender, args) =>
+        timer.Tick += async (_, _) =>
         {
             timer.Stop();
             var latestVersion = await GetLatestVersion();
@@ -251,12 +252,13 @@ public partial class MainWindow : Window
     {
         try
         {
-            var versionAsString =
-                await
-                    new WebClient().DownloadStringTaskAsync(
-                        "https://raw.github.com/kvakulo/Switcheroo/update/version.txt");
-            Version newVersion;
-            if (Version.TryParse(versionAsString, out newVersion))
+            const string uri = "https://raw.github.com/kvakulo/Switcheroo/update/version.txt";
+            var client = new HttpClient();
+            using var response = await client.GetAsync(uri);
+            using var content = response.Content;
+
+            var versionAsString = await content.ReadAsStringAsync();
+            if (Version.TryParse(versionAsString, out var newVersion))
             {
                 return newVersion;
             }

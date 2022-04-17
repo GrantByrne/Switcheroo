@@ -21,6 +21,7 @@
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.ComponentModel;
 using System.Diagnostics;
 using System.Linq;
 using System.Net;
@@ -39,7 +40,6 @@ using Switcheroo.Core;
 using Switcheroo.Core.Matchers;
 using Switcheroo.Properties;
 using Application = System.Windows.Application;
-using MenuItem = System.Windows.Forms.MenuItem;
 using MessageBox = System.Windows.MessageBox;
 
 namespace Switcheroo
@@ -52,10 +52,10 @@ namespace Switcheroo
         private NotifyIcon _notifyIcon;
         private HotKey _hotkey;
 
-        public static readonly RoutedUICommand CloseWindowCommand = new RoutedUICommand();
-        public static readonly RoutedUICommand SwitchToWindowCommand = new RoutedUICommand();
-        public static readonly RoutedUICommand ScrollListDownCommand = new RoutedUICommand();
-        public static readonly RoutedUICommand ScrollListUpCommand = new RoutedUICommand();
+        public static readonly RoutedUICommand CloseWindowCommand = new();
+        public static readonly RoutedUICommand SwitchToWindowCommand = new();
+        public static readonly RoutedUICommand ScrollListDownCommand = new();
+        public static readonly RoutedUICommand ScrollListUpCommand = new();
         private OptionsWindow _optionsWindow;
         private AboutWindow _aboutWindow;
         private AltTabHook _altTabHook;
@@ -165,27 +165,35 @@ namespace Switcheroo
         {
             var icon = Properties.Resources.icon;
 
-            var runOnStartupMenuItem = new MenuItem("Run on Startup", (s, e) => RunOnStartup(s as MenuItem))
-            {
-                Checked = new AutoStart().IsEnabled
-            };
+            var contextMenuStrip = new ContextMenuStrip();
 
+            var optionsItem = new ToolStripMenuItem("Options");
+            contextMenuStrip.Click += (_, _) => Options(); 
+            contextMenuStrip.Items.Add(optionsItem);
+
+            var runOnStartupItem = new ToolStripMenuItem("Run on Startup");
+            runOnStartupItem.Click += (_, _) => RunOnStartup(runOnStartupItem);
+            runOnStartupItem.Checked = new AutoStart().IsEnabled;
+            contextMenuStrip.Items.Add(runOnStartupItem);
+            
+            var aboutItem = new ToolStripMenuItem("About");
+            aboutItem.Click += (_, _) => About();
+            contextMenuStrip.Items.Add(aboutItem);
+            
+            var quitItem = new ToolStripMenuItem("Quit");
+            quitItem.Click += (_, _) => Quit();
+            contextMenuStrip.Items.Add(quitItem);
+            
             _notifyIcon = new NotifyIcon
             {
                 Text = "Switcheroo",
                 Icon = icon,
                 Visible = true,
-                ContextMenu = new System.Windows.Forms.ContextMenu(new[]
-                {
-                    new MenuItem("Options", (s, e) => Options()),
-                    runOnStartupMenuItem,
-                    new MenuItem("About", (s, e) => About()),
-                    new MenuItem("Exit", (s, e) => Quit())
-                })
+                ContextMenuStrip = contextMenuStrip
             };
         }
 
-        private static void RunOnStartup(MenuItem menuItem)
+        private static void RunOnStartup(ToolStripMenuItem menuItem)
         {
             try
             {

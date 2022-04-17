@@ -1,7 +1,6 @@
-﻿namespace Switcheroo.Core.Matchers
+﻿namespace Switcheroo.Core.Matchers;
+
+public interface IMatcher
 {
-    public interface IMatcher
-    {
-        MatchResult Evaluate(string input, string pattern);
-    }
+    MatchResult Evaluate(string input, string pattern);
 }

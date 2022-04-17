@@ -26,100 +26,99 @@ using System.Security.Principal;
 using System.Threading;
 using Switcheroo.Properties;
 
-namespace Switcheroo
+namespace Switcheroo;
+
+internal class Program
 {
-    internal class Program
+    private const string mutex_id = "DBDE24E4-91F6-11DF-B495-C536DFD72085-switcheroo";
+
+    [STAThread]
+    private static void Main()
     {
-        private const string mutex_id = "DBDE24E4-91F6-11DF-B495-C536DFD72085-switcheroo";
+        RunAsAdministratorIfConfigured();
 
-        [STAThread]
-        private static void Main()
+        using (var mutex = new Mutex(false, mutex_id))
         {
-            RunAsAdministratorIfConfigured();
-
-            using (var mutex = new Mutex(false, mutex_id))
+            var hasHandle = false;
+            try
             {
-                var hasHandle = false;
                 try
                 {
-                    try
-                    {
-                        hasHandle = mutex.WaitOne(5000, false);
-                        if (hasHandle == false) return; //another instance exist
-                    }
-                    catch (AbandonedMutexException)
-                    {
-                        // Log the fact the mutex was abandoned in another process, it will still get aquired
-                    }
+                    hasHandle = mutex.WaitOne(5000, false);
+                    if (hasHandle == false) return; //another instance exist
+                }
+                catch (AbandonedMutexException)
+                {
+                    // Log the fact the mutex was abandoned in another process, it will still get aquired
+                }
 
 #if PORTABLE
                         MakePortable(Settings.Default);
 #endif
 
-                    MigrateUserSettings();
+                MigrateUserSettings();
 
-                    var app = new App
-                    {
-                        MainWindow = new MainWindow()
-                    };
-                    app.Run();
-                }
-                finally
+                var app = new App
                 {
-                    if (hasHandle)
-                        mutex.ReleaseMutex();
-                }
-            }
-        }
-
-        private static void RunAsAdministratorIfConfigured()
-        {
-            if (RunAsAdminRequested() && !IsRunAsAdmin())
-            {
-                ProcessStartInfo proc = new ProcessStartInfo
-                {
-                    UseShellExecute = true,
-                    WorkingDirectory = Environment.CurrentDirectory,
-                    FileName = Assembly.GetEntryAssembly().CodeBase,
-                    Verb = "runas"
+                    MainWindow = new MainWindow()
                 };
-
-                Process.Start(proc);
-                Environment.Exit(0);
+                app.Run();
             }
-        }
-
-        private static bool RunAsAdminRequested()
-        {
-            return Settings.Default.RunAsAdmin;
-        }
-
-        private static void MakePortable(ApplicationSettingsBase settings)
-        {
-            var portableSettingsProvider = new PortableSettingsProvider();
-            settings.Providers.Add(portableSettingsProvider);
-            foreach (SettingsProperty prop in settings.Properties)
+            finally
             {
-                prop.Provider = portableSettingsProvider;
+                if (hasHandle)
+                    mutex.ReleaseMutex();
             }
-            settings.Reload();
         }
+    }
 
-        private static void MigrateUserSettings()
+    private static void RunAsAdministratorIfConfigured()
+    {
+        if (RunAsAdminRequested() && !IsRunAsAdmin())
         {
-            if (!Settings.Default.FirstRun) return;
+            ProcessStartInfo proc = new ProcessStartInfo
+            {
+                UseShellExecute = true,
+                WorkingDirectory = Environment.CurrentDirectory,
+                FileName = Assembly.GetEntryAssembly().CodeBase,
+                Verb = "runas"
+            };
 
-            Settings.Default.Upgrade();
-            Settings.Default.FirstRun = false;
-            Settings.Default.Save();
+            Process.Start(proc);
+            Environment.Exit(0);
         }
+    }
 
-        private static bool IsRunAsAdmin()
+    private static bool RunAsAdminRequested()
+    {
+        return Settings.Default.RunAsAdmin;
+    }
+
+    private static void MakePortable(ApplicationSettingsBase settings)
+    {
+        var portableSettingsProvider = new PortableSettingsProvider();
+        settings.Providers.Add(portableSettingsProvider);
+        foreach (SettingsProperty prop in settings.Properties)
         {
-            WindowsIdentity id = WindowsIdentity.GetCurrent();
-            WindowsPrincipal principal = new WindowsPrincipal(id);
-
-            return principal.IsInRole(WindowsBuiltInRole.Administrator);
+            prop.Provider = portableSettingsProvider;
         }
+        settings.Reload();
+    }
+
+    private static void MigrateUserSettings()
+    {
+        if (!Settings.Default.FirstRun) return;
+
+        Settings.Default.Upgrade();
+        Settings.Default.FirstRun = false;
+        Settings.Default.Save();
+    }
+
+    private static bool IsRunAsAdmin()
+    {
+        WindowsIdentity id = WindowsIdentity.GetCurrent();
+        WindowsPrincipal principal = new WindowsPrincipal(id);
+
+        return principal.IsInRole(WindowsBuiltInRole.Administrator);
     }
 }

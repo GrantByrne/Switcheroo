@@ -21,15 +21,14 @@
 using System.Collections.Generic;
 using System.Linq;
 
-namespace Switcheroo.Core
+namespace Switcheroo.Core;
+
+public class WindowFinder
 {
-    public class WindowFinder
+    public List<AppWindow> GetWindows()
     {
-        public List<AppWindow> GetWindows()
-        {
-            return AppWindow.AllToplevelWindows
-                .Where(a => a.IsAltTabWindow())
-                .ToList();
-        }
+        return AppWindow.AllToplevelWindows
+            .Where(a => a.IsAltTabWindow())
+            .ToList();
     }
 }

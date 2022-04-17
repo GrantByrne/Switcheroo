@@ -4,11 +4,10 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Switcheroo.Core
+namespace Switcheroo.Core;
+
+public interface IWindowText
 {
-    public interface IWindowText
-    {
-        string WindowTitle { get; }
-        string ProcessTitle { get; }
-    }
+    string WindowTitle { get; }
+    string ProcessTitle { get; }
 }

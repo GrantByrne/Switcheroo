@@ -1,28 +1,27 @@
 ﻿using System;
 using System.Threading.Tasks;
 
-namespace Switcheroo
+namespace Switcheroo;
+
+public class WindowCloser : IDisposable
 {
-    public class WindowCloser : IDisposable
+    private bool _isDisposed;
+
+    private static readonly TimeSpan CheckInterval = TimeSpan.FromMilliseconds(125);
+
+    public async Task<bool> TryCloseAsync(AppWindowViewModel window)
     {
-        private bool _isDisposed;
+        window.IsBeingClosed = true;
+        window.AppWindow.Close();
 
-        private static readonly TimeSpan CheckInterval = TimeSpan.FromMilliseconds(125);
+        while (!_isDisposed && !window.AppWindow.IsClosedOrHidden)
+            await Task.Delay(CheckInterval).ConfigureAwait(false);
 
-        public async Task<bool> TryCloseAsync(AppWindowViewModel window)
-        {
-            window.IsBeingClosed = true;
-            window.AppWindow.Close();
+        return window.AppWindow.IsClosedOrHidden;
+    }
 
-            while (!_isDisposed && !window.AppWindow.IsClosedOrHidden)
-                await Task.Delay(CheckInterval).ConfigureAwait(false);
-
-            return window.AppWindow.IsClosedOrHidden;
-        }
-
-        public void Dispose()
-        {
-            _isDisposed = true;
-        }
+    public void Dispose()
+    {
+        _isDisposed = true;
     }
 }

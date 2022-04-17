@@ -75,13 +75,13 @@ internal class Program
 
     private static void RunAsAdministratorIfConfigured()
     {
-        if (RunAsAdminRequested() && !IsRunAsAdmin())
+        if (RunAsAdminRequested() && !IsRunAsAdmin() && Assembly.GetEntryAssembly() is not null)
         {
-            ProcessStartInfo proc = new ProcessStartInfo
+            var proc = new ProcessStartInfo
             {
                 UseShellExecute = true,
                 WorkingDirectory = Environment.CurrentDirectory,
-                FileName = Assembly.GetEntryAssembly().CodeBase,
+                FileName = Assembly.GetEntryAssembly()!.Location,
                 Verb = "runas"
             };
 
